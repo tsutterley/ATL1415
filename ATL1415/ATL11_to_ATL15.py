@@ -36,7 +36,6 @@ from ATL1415.reread_data_from_fits import reread_data_from_fits
 from ATL1415.make_mask_from_vector import make_mask_from_vector
 from ATL1415.SMB_corr_from_grid import SMB_corr_from_grid
 import pyTMD
-import scipy.optimize
 
 def get_SRS_info(hemisphere):
     if hemisphere==1:
@@ -239,6 +238,7 @@ def apply_tides(D, xy0, W,
                 tide_adjustment=False,
                 tide_adjustment_file=None,
                 tide_adjustment_format='h5',
+                crop=True,
                 extrapolate=True,
                 cutoff=200,
                 EPSG=None,
@@ -262,6 +262,7 @@ def apply_tides(D, xy0, W,
         tide_adjustment: adjust amplitudes of tide model amplitudes to account for ice flexure
         tide_adjustment_file: File for adjusting tide and dac values for ice shelf flexure
         tide_adjustment_format: file format of the scaling factor grid
+        crop: Crop tide model data to (buffered) bounds of input
         extrapolate: extrapolate outside tide model bounds with nearest-neighbors
         cutoff: extrapolation cutoff in kilometers
 
@@ -289,11 +290,11 @@ def apply_tides(D, xy0, W,
     # extrapolate tide estimate beyond model bounds
     # extrapolation cutoff is in kilometers
     if np.any(is_els.ravel()):
-        D.tide_ocean = pyTMD.compute_tide_corrections(
-                D.x, D.y, D.delta_time,
-                DIRECTORY=tide_directory, MODEL=tide_model,
-                EPOCH=(2018,1,1,0,0,0), TYPE='drift', TIME='utc',
-                EPSG=EPSG, EXTRAPOLATE=extrapolate, CUTOFF=cutoff)
+        D.tide_ocean = pyTMD.compute.tide_elevations(
+                D.x, D.y, D.delta_time, DIRECTORY=tide_directory,
+                MODEL=tide_model, CROP=crop, EPSG=EPSG,
+                EPOCH=(2018,1,1,0,0,0), TYPE='drift', TIME='GPS',
+                EXTRAPOLATE=extrapolate, CUTOFF=cutoff)
     # use a flexure mask to adjust estimated tidal values
     if np.any(is_els.ravel()) and tide_adjustment:
         print(f"\t\t{tide_adjustment_file}") if verbose else None

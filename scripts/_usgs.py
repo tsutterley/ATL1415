@@ -74,6 +74,9 @@ def _usgs(**kwargs):
     cmap = colors.LinearSegmentedColormap('usgs', _usgs_data, **kwargs)
     cmap.set_over('w')
     # register color map to be recognizable by cm.get_cmap()
-    cm.register_cmap(name='usgs', cmap=cmap)
+    try:
+        cm.register_cmap(name='usgs', cmap=cmap)
+    except:
+        pass
     # return the colormap
     return cmap
